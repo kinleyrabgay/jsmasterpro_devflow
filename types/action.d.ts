@@ -1,5 +1,5 @@
 interface SignInWithOAuthParams {
-  provider: 'github' | 'google';
+  provider: "github" | "google";
   providerAccountId: string;
   user: {
     email: string;
@@ -14,4 +14,10 @@ interface AuthCredentials {
   username: string;
   email: string;
   password: string;
+}
+
+interface CreateQuestionParams {
+  title: string;
+  content: string;
+  tags: string[];
 }

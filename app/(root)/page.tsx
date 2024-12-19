@@ -1,13 +1,10 @@
 import Link from 'next/link';
 
-import { auth } from '@/auth';
 import QuestionCard from '@/components/cards/QuestionCard';
 import HomeFilter from '@/components/filters/HomeFilter';
 import LocalSearch from '@/components/search/LocalSearch';
 import { Button } from '@/components/ui/button';
 import ROUTES from '@/constants/routes';
-import { api } from '@/lib/api';
-import handleError from '@/lib/handlers/error';
 
 const questions = [
   {
@@ -50,24 +47,11 @@ const questions = [
   },
 ];
 
-const test = async () => {
-  try {
-    return await api.users.getAll();
-  } catch (e) {
-    console.log(e);
-    throw handleError(e);
-  }
-};
-
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
-  const user = await test();
-  const session = await auth();
-  console.log(user, session);
-
   const { query = '', filter = '' } = await searchParams;
 
   const filteredQuestions = questions.filter((question) => {
@@ -86,7 +70,7 @@ const Home = async ({ searchParams }: SearchParams) => {
         <h1 className='h1-bold text-dark100_light900'>All Questions</h1>
 
         <Button
-          className='primary-gradient min-h-[46px] px-4 py-3 !text-light-900'
+          className='primary-gradient !text-light-900 min-h-[46px] px-4 py-3'
           asChild
         >
           <Link href={ROUTES.ASK_QUESTION}>Ask a Question</Link>

@@ -48,7 +48,7 @@ const AuthForm = <T extends FieldValues>({
   const handleSubmit: SubmitHandler<T> = async (data) => {
     const result = (await onSubmit(data)) as ActionResponse;
 
-    if (result.success) {
+    if (result?.success) {
       toast({
         title: 'Success',
         description:
@@ -60,7 +60,7 @@ const AuthForm = <T extends FieldValues>({
       router.push(ROUTES.HOME);
     } else {
       toast({
-        title: `Error ${result.status}`,
+        title: `Error ${result?.status}`,
         description: result?.error?.message,
         variant: 'destructive',
       });
