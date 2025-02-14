@@ -24,14 +24,19 @@ import { Input } from '../ui/input';
 
 import ROUTES from '@/constants/routes';
 import { toast } from '@/hooks/use-toast';
-import { createQuestion } from '@/lib/actions/question.action';
+import { createQuestion, editQuestion } from '@/lib/actions/question.action';
 import { AskQuestionSchema } from '@/lib/validations';
 
 const Editor = dynamic(() => import('@/components/editor'), {
   ssr: false,
 });
 
-const QuestionForm = () => {
+interface Params {
+  question?: Question;
+  isEdit?: boolean;
+}
+
+const QuestionForm = ({ question, isEdit = false }: Params) => {
   const router = useRouter();
   const editorRef = useRef<MDXEditorMethods>(null);
   const [isPending, startTransition] = useTransition();
@@ -39,9 +44,9 @@ const QuestionForm = () => {
   const form = useForm<z.infer<typeof AskQuestionSchema>>({
     resolver: zodResolver(AskQuestionSchema),
     defaultValues: {
-      title: '',
-      content: '',
-      tags: [],
+      title: question?.title || '',
+      content: question?.content || '',
+      tags: question?.tags.map((tag) => tag.name) || [],
     },
   });
 
@@ -89,23 +94,46 @@ const QuestionForm = () => {
     data: z.infer<typeof AskQuestionSchema>
   ) => {
     startTransition(async () => {
+      if (isEdit && question) {
+        const result = await editQuestion({
+          questionId: question?._id,
+          ...data,
+        });
+
+        if (result.success) {
+          toast({
+            title: 'Success',
+            description: 'Question updated successfully',
+          });
+
+          if (result.data)
+            router.push(ROUTES.QUESTION(result.data._id as string));
+        } else {
+          toast({
+            title: `Error ${result.status}`,
+            description: result.error?.message || 'Something went wrong',
+            variant: 'destructive',
+          });
+        }
+
+        return;
+      }
+
       const result = await createQuestion(data);
 
-      if (result?.success) {
+      if (result.success) {
         toast({
           title: 'Success',
           description: 'Question created successfully',
         });
 
-        if (result.data?._id) {
-          router.push(ROUTES.QUESTION(result.data._id));
-        } else {
-          toast({
-            title: `Error ${result.status}`,
-            description: result.error?.message ?? 'Something went wrong',
-            variant: 'destructive',
-          });
-        }
+        if (result.data) router.push(ROUTES.QUESTION(result.data._id));
+      } else {
+        toast({
+          title: `Error ${result.status}`,
+          description: result.error?.message || 'Something went wrong',
+          variant: 'destructive',
+        });
       }
     });
   };
@@ -215,7 +243,7 @@ const QuestionForm = () => {
                 <span>Submitting</span>
               </>
             ) : (
-              <>Ask A Question</>
+              <>{isEdit ? 'Edit' : 'Ask a Question'}</>
             )}
           </Button>
         </div>
